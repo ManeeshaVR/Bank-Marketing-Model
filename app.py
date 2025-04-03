@@ -1,20 +1,35 @@
-# pip install Flask
+from flask import Flask, request, jsonify, render_template
+import joblib
+import pandas as pd
 
-# python --version
+model = joblib.load('Logistic-Regression.joblib')
 
-from flask import Flask
-
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 @app.route('/')
 def home():
-    return '<h1>AI v01</h1>'
+    return render_template('index.html')
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+
+        data = request.get_json()
+
+        print(data)
+
+        input_df = pd.DataFrame([data])
+
+        prediction = model.predict(input_df)
+
+        print(prediction)
+
+        prediction_list = prediction.tolist()
+
+        return jsonify({'prediction': prediction_list[0]})
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    #app.run(debug=True)
-    app.run(host="0.0.0.0", port=80) # to change the port .
-
-
-# make docker file
-# docker build -t class3 .
-# docker run -p 5000:5000 class3
+    app.run(host="0.0.0.0", port=5000,debug=True)
